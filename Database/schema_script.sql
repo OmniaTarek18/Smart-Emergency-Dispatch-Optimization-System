@@ -1,12 +1,7 @@
 -- MySQL Workbench Forward Engineering
-
 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-
--- -----------------------------------------------------
--- Schema Emergency_Dispatcher
--- -----------------------------------------------------
 
 -- -----------------------------------------------------
 -- Schema Emergency_Dispatcher
@@ -33,7 +28,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`station` (
   `station_id` INT NOT NULL AUTO_INCREMENT,
-  `type` ENUM('FIRE', 'POLICE', 'MEDICAL') NOT NULL DEFAULT 'FIRE',
+  `type` ENUM('FIRE', 'POLICE', 'MEDICAL') NOT NULL,
   `location` POINT NOT NULL,
   `zone` VARCHAR(45) NULL,
   PRIMARY KEY (`station_id`))
@@ -45,7 +40,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`vehicle` (
   `vehicle_id` INT NOT NULL AUTO_INCREMENT,
-  `status` ENUM('AVAILABLE', 'ON_ROUTE') NOT NULL DEFAULT 'AVAILABLE',
+  `status` ENUM('AVAILABLE', 'PENDING', 'ON_ROUTE') NOT NULL DEFAULT 'AVAILABLE',
   `location` POINT NOT NULL,
   `capacity` INT NOT NULL,
   `station_id` INT NOT NULL,
@@ -54,8 +49,8 @@ CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`vehicle` (
   CONSTRAINT `fk_station_id`
     FOREIGN KEY (`station_id`)
     REFERENCES `Emergency_Dispatcher`.`station` (`station_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -67,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`incident` (
   `time_reported` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `time_resolved` DATETIME NULL DEFAULT NULL,
   `location` POINT NOT NULL,
+  `type` ENUM('FIRE', 'POLICE', 'MEDICAL') NOT NULL,
   `status` ENUM('REPORTED', 'ASSIGNED', 'RESOLVED') NOT NULL DEFAULT 'REPORTED',
   `severity_level` ENUM('LOW', 'MEDIUM', 'HIGH', 'CRITICAL') NOT NULL DEFAULT 'LOW',
   PRIMARY KEY (`incident_id`))
@@ -79,46 +75,47 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`responder_vehicle` (
   `vehicle_id` INT NOT NULL,
   `responder_id` INT NOT NULL,
-  PRIMARY KEY (`vehicle_id`, `responder_id`),
-  INDEX `responder_id_idx` (`responder_id` ASC) VISIBLE,
+  PRIMARY KEY (`responder_id`),
   CONSTRAINT `fk_vehicle_id`
     FOREIGN KEY (`vehicle_id`)
     REFERENCES `Emergency_Dispatcher`.`vehicle` (`vehicle_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_responder_id`
     FOREIGN KEY (`responder_id`)
     REFERENCES `Emergency_Dispatcher`.`user` (`user_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
 -- Table `Emergency_Dispatcher`.`DISPATCH`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`DISPATCH` (
-  `dispatch_id` INT NOT NULL,
+CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`dispatch` (
+  `dispatch_id` INT NOT NULL AUTO_INCREMENT,
   `vehicle_id` INT NOT NULL,
   `incident_id` INT NOT NULL,
-  PRIMARY KEY (`dispatch_id`, `vehicle_id`, `incident_id`),
+  `dispatcher_id` INT,
+  PRIMARY KEY (`dispatch_id`),
+  UNIQUE KEY `unique_disptach` (`vehicle_id`, `incident_id`),
   INDEX `vehicle_id_idx` (`vehicle_id` ASC) VISIBLE,
   INDEX `incident_id_idx` (`incident_id` ASC) VISIBLE,
-  CONSTRAINT `fk_dispatch_id`
-    FOREIGN KEY (`dispatch_id`)
+  CONSTRAINT `fk_dispatcher_id`
+    FOREIGN KEY (`dispatcher_id`)
     REFERENCES `Emergency_Dispatcher`.`user` (`user_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_dispatch_vehicle_id`
     FOREIGN KEY (`vehicle_id`)
     REFERENCES `Emergency_Dispatcher`.`vehicle` (`vehicle_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_incident_id`
     FOREIGN KEY (`incident_id`)
     REFERENCES `Emergency_Dispatcher`.`incident` (`incident_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
@@ -126,17 +123,17 @@ ENGINE = InnoDB;
 -- Table `Emergency_Dispatcher`.`admin_notification`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`admin_notification` (
-  `notification_id` INT NOT NULL AUTO_INCREMENT,
+  `admin_notification_id` INT NOT NULL AUTO_INCREMENT,
   `title` VARCHAR(100) NOT NULL,
   `body` TEXT NOT NULL,
-  PRIMARY KEY (`notification_id`))
+  PRIMARY KEY (`admin_notification_id`))
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `Emergency_Dispatcher`.`notify_admin`
+-- Table `Emergency_Dispatcher`.`admin_notification_status`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`notify_admin` (
+CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`admin_notification_status` (
   `admin_id` INT NOT NULL,
   `admin_notification_id` INT NOT NULL,
   `status` ENUM('SEEN', 'DELIVERED') NOT NULL DEFAULT 'DELIVERED',
@@ -145,55 +142,57 @@ CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`notify_admin` (
   CONSTRAINT `fk_admin_id`
     FOREIGN KEY (`admin_id`)
     REFERENCES `Emergency_Dispatcher`.`user` (`user_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
   CONSTRAINT `fk_admin_notification_id`
     FOREIGN KEY (`admin_notification_id`)
-    REFERENCES `Emergency_Dispatcher`.`admin_notification` (`notification_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    REFERENCES `Emergency_Dispatcher`.`admin_notification` (`admin_notification_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `Emergency_Dispatcher`.`responder_dispatcher_notification`
+-- Table `Emergency_Dispatcher`.`user_notification_status`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`responder_dispatcher_notification` (
-  `responder_dispatcher_notification_id` INT NOT NULL,
+CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`user_notification_status` (
+  `user_notification_id` INT NOT NULL,
   `status` ENUM('SEEN', 'DELIVERED') NOT NULL DEFAULT 'DELIVERED',
   `user_id` INT NOT NULL,
-  PRIMARY KEY (`responder_dispatcher_notification_id`),
+  PRIMARY KEY (`user_notification_id`, `user_id`),
   INDEX `user_id_idx` (`user_id` ASC) VISIBLE,
   CONSTRAINT `fk_user_id`
     FOREIGN KEY (`user_id`)
     REFERENCES `Emergency_Dispatcher`.`user` (`user_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE, 
+    CONSTRAINT `fk_user_notification_id`
+    FOREIGN KEY (`user_notification_id`)
+    REFERENCES `Emergency_Dispatcher`.`user_notification` (`user_notification_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `Emergency_Dispatcher`.`notify_responder_dispatcher`
+-- Table `Emergency_Dispatcher`.`user_notification`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`notify_responder_dispatcher` (
-  `responder_dispatcher_notification_id` INT NOT NULL,
+CREATE TABLE IF NOT EXISTS `Emergency_Dispatcher`.`user_notification` (
+  `user_notification_id` INT NOT NULL AUTO_INCREMENT,
   `incident_id` INT NOT NULL,
-  PRIMARY KEY (`responder_dispatcher_notification_id`, `incident_id`),
+  `title` VARCHAR(100),
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`user_notification_id`),
   INDEX `incident_id_idx` (`incident_id` ASC) VISIBLE,
   CONSTRAINT `fk_rd_incident_id`
     FOREIGN KEY (`incident_id`)
     REFERENCES `Emergency_Dispatcher`.`incident` (`incident_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_responder_dispatcher_notification_id`
-    FOREIGN KEY (`responder_dispatcher_notification_id`)
-    REFERENCES `Emergency_Dispatcher`.`responder_dispatcher_notification` (`responder_dispatcher_notification_id`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE)
 ENGINE = InnoDB;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
-admin_notificationadmin_notification
+

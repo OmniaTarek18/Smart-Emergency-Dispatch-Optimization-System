@@ -5,7 +5,15 @@ from django.db import connection
 from .hasher import hash_password, check_password
 from .jwt_utils import generate_access_token, generate_refresh_token, refresh_access_token
 from .auth import auth_user 
-from .repo import update_user_password, get_user_by_email, get_user_by_user_id
+from .repo import (
+    update_user_password, get_user_by_email, get_user_by_user_id,
+    create_incident, get_all_incidents, get_incident_by_id, resolve_incident,
+    get_all_vehicles, get_vehicle_by_id, update_vehicle_location, 
+    create_vehicle, delete_vehicle,
+    modify_dispatch, get_dispatch_by_incident,
+    get_all_stations, create_station,
+    create_admin_user, get_all_admin_users
+)
 import json
 
 
@@ -180,3 +188,417 @@ def check_request_method(request, method):
     if request.method != method:
         return f"Invalid request method. Use {method}."
     return None
+
+
+@csrf_exempt
+def report_incident(request):
+    """Reporter API: Report new incident (auto-assigns vehicle via stored procedure)"""
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        
+        # Validate required fields
+        required_fields = ['type', 'lat', 'lng', 'severity_level']
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({"message": f"Missing required field: {field}"}, status=400)
+        
+        # Validate type
+        valid_types = ['FIRE', 'POLICE', 'MEDICAL']
+        if data['type'].upper() not in valid_types:
+            return JsonResponse({"message": "Invalid type. Must be FIRE, POLICE, or MEDICAL"}, status=400)
+        
+        # Validate severity
+        valid_severity = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+        if data['severity_level'].upper() not in valid_severity:
+            return JsonResponse({"message": "Invalid severity_level"}, status=400)
+        
+        incident = create_incident(
+            incident_type=data['type'].upper(),
+            location_lat=data['lat'],
+            location_lng=data['lng'],
+            severity=data['severity_level'].upper(),
+            description=data.get('description', '')
+        )
+        
+        return JsonResponse({
+            "message": "Incident reported and vehicle auto-assigned successfully",
+            "incident": incident
+        }, status=201)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+# ============= RESPONDER APIS =============
+
+@csrf_exempt
+def update_unit_location(request):
+    """Responder API: Update vehicle location"""
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        
+        required_fields = ['vehicle_id', 'lat', 'lng']
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({"message": f"Missing required field: {field}"}, status=400)
+        
+        vehicle = update_vehicle_location(
+            vehicle_id=data['vehicle_id'],
+            lat=data['lat'],
+            lng=data['lng']
+        )
+        
+        return JsonResponse({
+            "message": "Location updated successfully",
+            "vehicle": vehicle
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@csrf_exempt
+def resolve_incident_endpoint(request):
+    """Responder API: Resolve incident (uses stored procedure)"""
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        
+        if 'incident_id' not in data:
+            return JsonResponse({"message": "Missing incident_id"}, status=400)
+        
+        incident = resolve_incident(data['incident_id'])
+        
+        return JsonResponse({
+            "message": "Incident resolved successfully",
+            "incident": incident
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+# ============= ADMIN/DISPATCHER APIS =============
+
+@csrf_exempt
+@auth_user
+def list_incidents(request):
+    """Admin/Dispatcher API: List all incidents"""
+    err = check_request_method(request, "GET")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] not in ['ADMIN', 'DISPATCHER']:
+            return JsonResponse({"message": "Unauthorized"}, status=403)
+        
+        status = request.GET.get('status', None)
+        if status:
+            status = status.upper()
+        
+        incidents = get_all_incidents(status)
+        
+        return JsonResponse({
+            "incidents": incidents,
+            "count": len(incidents)
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@csrf_exempt
+@auth_user
+def dispatch_incident(request):
+    """Admin/Dispatcher API: Modify vehicle assignment for incident"""
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] not in ['ADMIN', 'DISPATCHER']:
+            return JsonResponse({"message": "Unauthorized"}, status=403)
+        
+        data = json.loads(request.body)
+        
+        required_fields = ['dispatch_id', 'new_vehicle_id']
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({"message": f"Missing required field: {field}"}, status=400)
+        
+        # Use stored procedure to modify dispatch
+        incident = modify_dispatch(
+            dispatch_id=data['dispatch_id'],
+            new_vehicle_id=data['new_vehicle_id'],
+            dispatcher_id=request.user_id
+        )
+        
+        return JsonResponse({
+            "message": "Dispatch modified successfully",
+            "incident": incident
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@csrf_exempt
+@auth_user
+def get_incident_dispatches(request, incident_id):
+    """Get dispatch information for an incident"""
+    err = check_request_method(request, "GET")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] not in ['ADMIN', 'DISPATCHER']:
+            return JsonResponse({"message": "Unauthorized"}, status=403)
+        
+        dispatches = get_dispatch_by_incident(incident_id)
+        
+        return JsonResponse({
+            "dispatches": dispatches
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+# ============= VEHICLE MANAGEMENT =============
+
+@csrf_exempt
+@auth_user
+def list_vehicles(request):
+    """Admin/Dispatcher API: List all vehicles"""
+    err = check_request_method(request, "GET")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] not in ['ADMIN', 'DISPATCHER']:
+            return JsonResponse({"message": "Unauthorized"}, status=403)
+        
+        status = request.GET.get('status', None)
+        if status:
+            status = status.upper()
+        
+        vehicles = get_all_vehicles(status)
+        
+        return JsonResponse({
+            "vehicles": vehicles,
+            "count": len(vehicles)
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@csrf_exempt
+@auth_user
+def create_vehicle_endpoint(request):
+    """Admin API: Create new vehicle"""
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] != 'ADMIN':
+            return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        
+        data = json.loads(request.body)
+        
+        required_fields = ['station_id', 'capacity', 'lat', 'lng']
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({"message": f"Missing required field: {field}"}, status=400)
+        
+        vehicle = create_vehicle(
+            station_id=data['station_id'],
+            capacity=data['capacity'],
+            lat=data['lat'],
+            lng=data['lng']
+        )
+        
+        return JsonResponse({
+            "message": "Vehicle created successfully",
+            "vehicle": vehicle
+        }, status=201)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@csrf_exempt
+@auth_user
+def delete_vehicle_endpoint(request, vehicle_id):
+    """Admin API: Delete vehicle"""
+    err = check_request_method(request, "DELETE")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] != 'ADMIN':
+            return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        
+        delete_vehicle(vehicle_id)
+        
+        return JsonResponse({
+            "message": "Vehicle deleted successfully"
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+# ============= STATION MANAGEMENT =============
+
+@csrf_exempt
+@auth_user
+def list_stations(request):
+    """Admin/Dispatcher API: List all stations"""
+    err = check_request_method(request, "GET")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] not in ['ADMIN', 'DISPATCHER']:
+            return JsonResponse({"message": "Unauthorized"}, status=403)
+        
+        stations = get_all_stations()
+        
+        return JsonResponse({
+            "stations": stations,
+            "count": len(stations)
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@csrf_exempt
+@auth_user
+def create_station_endpoint(request):
+    """Admin API: Create new station"""
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] != 'ADMIN':
+            return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        
+        data = json.loads(request.body)
+        
+        required_fields = ['type', 'zone', 'lat', 'lng']
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({"message": f"Missing required field: {field}"}, status=400)
+        
+        valid_types = ['FIRE', 'POLICE', 'MEDICAL']
+        if data['type'].upper() not in valid_types:
+            return JsonResponse({"message": "Invalid type"}, status=400)
+        
+        station = create_station(
+            station_type=data['type'].upper(),
+            zone=data['zone'],
+            lat=data['lat'],
+            lng=data['lng']
+        )
+        
+        return JsonResponse({
+            "message": "Station created successfully",
+            "station": station
+        }, status=201)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+# ============= USER MANAGEMENT =============
+
+@csrf_exempt
+@auth_user
+def list_admins(request):
+    """Admin API: List all admin/dispatcher users"""
+    err = check_request_method(request, "GET")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] != 'ADMIN':
+            return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        
+        admins = get_all_admin_users()
+        
+        return JsonResponse({
+            "admins": admins,
+            "count": len(admins)
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+@csrf_exempt
+@auth_user
+def create_admin_endpoint(request):
+    """Admin API: Create new admin/dispatcher user"""
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] != 'ADMIN':
+            return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        
+        data = json.loads(request.body)
+        
+        required_fields = ['email', 'password', 'name']
+        for field in required_fields:
+            if field not in data:
+                return JsonResponse({"message": f"Missing required field: {field}"}, status=400)
+        
+        role = data.get('role', 'DISPATCHER').upper()
+        if role not in ['ADMIN', 'DISPATCHER']:
+            return JsonResponse({"message": "Invalid role. Must be ADMIN or DISPATCHER"}, status=400)
+        
+        password_hash = hash_password(data['password'])
+        
+        admin = create_admin_user(
+            email=data['email'],
+            password_hash=password_hash,
+            name=data['name'],
+            role=role
+        )
+        
+        admin.pop('password', None)
+        
+        return JsonResponse({
+            "message": "User created successfully",
+            "admin": admin
+        }, status=201)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+

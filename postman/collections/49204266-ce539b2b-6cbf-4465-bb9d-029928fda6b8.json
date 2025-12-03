@@ -529,7 +529,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"incident_id\": 16,\r\n    \"new_vehicle_id\": 15\r\n\r\n}",
+							"raw": "{\r\n    \"station_id\" : 1,\r\n    \"capacity\" : 4,\r\n    \"lat\": 22,\r\n    \"lng\": 33\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -537,7 +537,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/admin/incidents/dispatch/",
+							"raw": "http://127.0.0.1:8000/admin/vehicles/create/",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -548,8 +548,8 @@
 							"port": "8000",
 							"path": [
 								"admin",
-								"incidents",
-								"dispatch",
+								"vehicles",
+								"create",
 								""
 							]
 						}
@@ -557,17 +557,17 @@
 					"response": []
 				},
 				{
-					"name": "Get Dispatch Copy 2",
+					"name": "Delete Vehicle",
 					"id": "49204266-a4df1f12-900d-4f77-9f67-e650260ffb19",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
 					"request": {
-						"method": "POST",
+						"method": "DELETE",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"incident_id\": 16,\r\n    \"new_vehicle_id\": 15\r\n\r\n}",
+							"raw": "{\r\n    \"vehicle_id\": 22\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -575,7 +575,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/admin/incidents/dispatch/",
+							"raw": "http://127.0.0.1:8000/admin/vehicles/delete/",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -586,8 +586,8 @@
 							"port": "8000",
 							"path": [
 								"admin",
-								"incidents",
-								"dispatch",
+								"vehicles",
+								"delete",
 								""
 							]
 						}

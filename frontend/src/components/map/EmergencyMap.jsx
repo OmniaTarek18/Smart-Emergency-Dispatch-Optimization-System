@@ -15,15 +15,16 @@ import "./Map.css";
 
 const panelStyle = { /* ... keep your existing panel style ... */
   position: "absolute", top: "10px", left: "10px", background: "white", padding: "15px", 
-  borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.3)", zIndex: 10, maxWidth: "250px"
+  borderRadius: "8px", boxShadow: "0 2px 10px rgba(0,0,0,0.3)", zIndex: 10, maxWidth: "350px",
+  backgroundColor: "#222222cc", color: "white"
 };
 
 const buttonStyle = (isActive) => ({ /* ... keep existing button style ... */
-  background: isActive ? "#007bff" : "#f0f0f0", color: isActive ? "white" : "#333",
+  background: isActive ? "#c20000ff" : "#f0f0f0", color: isActive ? "white" : "#333",
   border: "1px solid #ccc", padding: "8px 12px", margin: "5px 5px 0 0", borderRadius: "4px", cursor: "pointer"
 });
 
-export default function EmergencyMap({ stations, allIncidents, route, focusedLocation }) {
+export default function EmergencyMap({ stations,cars,allIncidents, route, focusedLocation }) {
   
   // 1. CREATE A REF FOR THE MAP
   const mapRef = useRef(null);
@@ -55,12 +56,12 @@ export default function EmergencyMap({ stations, allIncidents, route, focusedLoc
       
       {/* Control Panel (Keeping your existing UI) */}
       <div style={panelStyle}>
-        <h3 style={{ margin: "0 0 10px 0", fontSize: "16px" }}>Dispatcher Controls</h3>
         <div style={{ marginBottom: "15px" }}>
             <label style={{fontWeight: 'bold', fontSize: '12px'}}>Filter Incidents:</label><br/>
             <button onClick={() => setFilterType("all")} style={buttonStyle(filterType === "all")}>All</button>
-            <button onClick={() => setFilterType("fire")} style={buttonStyle(filterType === "fire")}>Fire 🔥</button>
-            <button onClick={() => setFilterType("accident")} style={buttonStyle(filterType === "accident")}>Accident ⚠️</button>
+            <button onClick={() => setFilterType("FIRE")} style={buttonStyle(filterType === "FIRE")}>Fire 🔥</button>
+            <button onClick={() => setFilterType("POLICE")} style={buttonStyle(filterType === "POLICE")}>Police 🚨</button>
+            <button onClick={() => setFilterType("MEDICAL")} style={buttonStyle(filterType === "MEDICAL")}>Medical 🆘</button>
         </div>
         <div>
             <label style={{fontWeight: 'bold', fontSize: '12px'}}>Map Layer:</label><br/>
@@ -73,8 +74,8 @@ export default function EmergencyMap({ stations, allIncidents, route, focusedLoc
         ref={mapRef} // 3. ATTACH THE REF HERE
         mapLib={maplibregl}
         initialViewState={{
-          longitude: 31.2357,
-          latitude: 30.0444,
+          longitude: 29.9467651,
+          latitude: 31.2251573,
           zoom: 13,
         }}
         style={{ width: "100%", height: "100%" }}
@@ -87,24 +88,30 @@ export default function EmergencyMap({ stations, allIncidents, route, focusedLoc
 
         {/* Stations */}
         {stations.map((st) => (
-          <Marker key={st.id} latitude={st.lat} longitude={st.lng} anchor="bottom" onClick={e => { e.originalEvent.stopPropagation(); setSelectedItem(st); }}>
+          <Marker key={st.station_id} latitude={st.lat} longitude={st.lng} anchor="bottom" onClick={e => { e.originalEvent.stopPropagation(); setSelectedItem(st); }}>
             <div style={{ fontSize: "25px", cursor: "pointer" }}>🏥</div>
           </Marker>
         ))}
 
         {/* Incidents */}
         {visibleIncidents.map((inc) => (
-          <Marker key={inc.id} latitude={inc.lat} longitude={inc.lng} anchor="bottom" onClick={e => { e.originalEvent.stopPropagation(); setSelectedItem(inc); }}>
+          <Marker key={inc.incident_id} latitude={inc.lat} longitude={inc.lng} anchor="bottom" onClick={e => { e.originalEvent.stopPropagation(); setSelectedItem(inc); }}>
             <div style={{ fontSize: "28px", cursor: "pointer" }}>
-              {inc.type === "fire" ? "🔥" : inc.type === "accident" ? "⚠️" : "🆘"}
+              {inc.type === "FIRE" ? "🔥" : inc.type === "POLICE" ? "🚨" : "🆘"}
             </div>
           </Marker>
         ))}
 
         {/* Ambulance */}
-        <Marker latitude={ambulancePos.lat} longitude={ambulancePos.lng} anchor="center">
-           <div style={{ fontSize: "30px", transition: "transform 1.5s linear" }}>🚑</div>
+        {cars.map(
+          car => (
+          <Marker key={car.vehicle_id} latitude={car.lat} longitude={car.lng} anchor="center">
+           <div style={{ fontSize: "30px", transition: "transform 1.5s linear" }}>
+              {car.type === "Ambulance" ? "🚑" : car.type === "Fire Truck" ? "🚒" : "🚓"}
+            </div>
         </Marker>
+      ))}
+        
 
         {/* Route */}
         <Source id="route" type="geojson" data={route}>

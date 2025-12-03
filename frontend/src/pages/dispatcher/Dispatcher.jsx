@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EmergencyMap from "../../components/map/EmergencyMap";
 import DispatcherControls from "../../components/dispatcherControls/DispatcherControls";
+import axios from "axios";
 // import "./Dispatcher.css"; 
 
 export default function Dispatcher() {
   // 1. DATA STATE 
-  const [stations] = useState([
+  const [stations,setStations] = useState([
     { id: 1, name: "Central Command", lat: 31.2252407, lng: 29.9467916, trucks: 5 },
     { id: 2, name: "Downtown Unit", lat: 30.0500, lng: 31.2400, trucks: 2 },
   ]);
@@ -22,10 +23,10 @@ export default function Dispatcher() {
     { id: "c3", name: "Charlie-9", type: "Police", status: "Busy", lat: 30.0550, lng: 31.2200 },
   ]);
 
-  // --- NEW: State to hold the location we want to fly to ---
   const [focusedLocation, setFocusedLocation] = useState(null);
 
-  // --- NEW: Function to handle "Locate" clicks ---
+ 
+
   const handleLocate = (lat, lng) => {
     setFocusedLocation({ lat, lng, timestamp: Date.now() }); // Timestamp ensures unique updates even if clicking same spot
   };
@@ -42,18 +43,60 @@ export default function Dispatcher() {
     }));
   };
 
-  const route = {
-    type: "Feature",
-    geometry: {
-      type: "LineString",
-      coordinates: [
-        [31.2357, 30.0444],
-        [31.2400, 30.0460],
-        [31.2450, 30.0475],
-        [31.2500, 30.0480], 
-      ],
-    },
-  };
+
+  const getIncidents = async () => {
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/admin/incidents/",
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` } }
+      );
+        if (response.data) {
+            setIncidents(response.data.incidents);
+            console.log("Fetched incidents:", response.data.incidents);
+        }
+    } catch (error) {
+      console.error("Error fetching incidents:", error);
+    }
+    };
+
+    const getStations = async () => {
+        try {
+            const response = await axios.get("http://127.0.0.1:8000/admin/stations/",
+                { headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` } }
+            );
+            if (response.data) {
+                setStations(response.data.stations);
+                console.log("Fetched stations:", response.data.stations);
+            }
+        } catch (error) {
+            console.error("Error fetching stations:", error);
+        }
+    };
+
+    const getVehicles = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/admin/vehicles/",
+          { headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` } }
+        );
+            if (response.data) {
+                setCars(response.data.vehicles);
+                console.log("Fetched vehicles:", response.data.vehicles);
+            }
+      } catch (error) {
+        console.error("Error fetching vehicles:", error);
+        }
+        };
+
+    useEffect(() => {
+      getIncidents();
+      getVehicles();
+      getStations();
+    }, []);
+
+
+    
+    
+        
+
 
   return (
     <div className="dispatcher-layout" style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
@@ -70,8 +113,9 @@ export default function Dispatcher() {
       <div style={{ flex: 1, position: "relative" }}>
         <EmergencyMap 
             stations={stations} 
+            cars={cars}
             allIncidents={incidents} 
-            route={route} 
+            // route={route} 
             focusedLocation={focusedLocation} // Pass the state down
         />
       </div>

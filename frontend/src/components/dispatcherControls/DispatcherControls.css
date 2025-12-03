@@ -85,7 +85,7 @@
 }
 
 .incident-card { border-left-color: #d32f2f; }
-.unit-card { display: flex; align-items: center; gap: 10px; border-left-color: #007bff; }
+.unit-card { display: inline-block; align-items: center; gap: 10px; border-left-color: #007bff; }
 .station-card { border-left-color: #28a745; }
 
 .card-header {
@@ -120,6 +120,15 @@
     align-items: center;
     border-top: 1px solid #eee;
     padding-top: 10px;
+}
+
+.card-desc-car-id{
+    margin: 0;
+    color: #555;
+    font-size: 0.75rem;
+    position: absolute;
+    right: 0px;
+    top: 0pc;
 }
 
 /* BUTTONS */
@@ -175,8 +184,10 @@
 }
 
 /* STATUS COLORS */
-.status-text.pending { color: #d32f2f; font-weight: bold; }
-.status-text.dispatched { color: #1976d2; font-weight: bold; }
+.status-text.reported { color: #d32f2f; font-weight: bold; }
+.status-text.assigned { color: #1976d2; font-weight: bold; }
+.status-text.resolved { color: #28a745; font-weight: bold; }
 
-.status-badge.available { color: #28a745; background: #e6f9e9; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;}
-.status-badge.busy { color: #d32f2f; background: #fdecea; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;}
+.status-badge.available { color: #28a745; background: #e6f9e9;width: 70px; height: 20px; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;}
+.status-badge.on_route { color: #d32f2f; background: #fdecea;width: 70px; height: 20px; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;}
+.status-badge.pending { color: #f57c00; background: #fff4e5;width: 70px; height: 20px; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;}

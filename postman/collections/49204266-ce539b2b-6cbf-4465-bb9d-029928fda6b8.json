@@ -747,6 +747,42 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "accept incident Copy",
+					"id": "49204266-b9384a4b-d031-4525-a86d-cc147e06098c",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"vehicle_id\": 2\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8000/accept-incident/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8000",
+							"path": [
+								"accept-incident",
+								""
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"id": "49204266-0e6050f0-23d9-4f3d-b1ec-1f7645669594"

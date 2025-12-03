@@ -463,7 +463,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"dispatch_id\": ,\r\n    \"new_vehicle_id\": 20\r\n\r\n}",
+							"raw": "{\r\n    \"incident_id\": 16,\r\n    \"new_vehicle_id\": 15\r\n\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"

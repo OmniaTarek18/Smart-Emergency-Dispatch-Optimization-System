@@ -35,4 +35,9 @@ urlpatterns = [
     path('admin/users/', views.list_admins, name='list_admins'),
     path('admin/users/create/', views.create_admin_endpoint, name='create_admin'),
 
+    path('admin/analytics/', views.get_analytics, name='get_average_response_time'),
+
+    path("accept-incident/", views.pendingToOnRoute, name="7amada"),
+
+    path("admin/assign-vechile-to-rsponder/", views.ass_responder_to_vehicle, name="assign_to_responder")
 ]

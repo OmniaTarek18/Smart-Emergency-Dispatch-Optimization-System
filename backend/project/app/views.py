@@ -601,3 +601,83 @@ def create_admin_endpoint(request):
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=500)
 
+
+def get_analytics(request):
+    """Get system analytics - placeholder"""
+    err = check_request_method(request, "GET")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        # Placeholder analytics data
+        analytics = {}
+        analytics["average_response_time"] = get_average_response_time()
+        analytics["max_response_time"] = get_max_response_time()
+        analytics["min_response_time"] = get_min_response_time()
+        analytics["best_responder"] = ""
+        analytics["worst_responder"] = ""
+        analytics["best_station"] = get_best_station()
+        analytics["worst_station"] = get_worst_station()
+        analytics["total_incidents_type"] = ""
+        analytics["resolved_incidents_type"] = ""
+        analytics["active_vehicles_type"] = ""
+        analytics["response_time_type"] = ""
+
+        
+        return JsonResponse({
+            "analytics": analytics
+        }, status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+@csrf_exempt
+@auth_user
+def pendingToOnRoute(request):
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] != 'ADMIN' and user['role'] != "RESPONDER":
+            return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        
+        data = json.loads(request.body)
+        if not data["vehicle_id"]:
+            return JsonResponse({"message": "please entre incident_id"},status=400)
+        update_vehicles_to_on_route_by_incident(data["vehicle_id"])
+        get_incident_by_id(data["vehicle_id"])
+        return JsonResponse(
+            get_vehicle_by_id(data["incident_id"]), status=200
+        )
+    
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+@csrf_exempt
+@auth_user
+def ass_responder_to_vehicle(request):
+    err = check_request_method(request, "POST")
+    if err:
+        return JsonResponse({"message": str(err)}, status=400)
+
+    try:
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] != 'ADMIN':
+            return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        
+        data = json.loads(request.body)
+        assign_responder_to_vehicle(data["responder_id"], data["vehicle_id"])
+        usr = get_user_by_user_id(data["responder_id"])
+        vechile = get_vehicle_by_id(data["vehicle_id"])
+        return JsonResponse({
+            "user": usr,
+            "vechile": vechile
+        },status=200)
+        
+    except Exception as e:
+        return JsonResponse({"message": str(e)}, status=500)
+
+
+

@@ -287,3 +287,38 @@ BEGIN
 
     COMMIT;
 END;
+
+
+
+CREATE PROCEDURE assign_responder_to_vehicle(
+    IN p_responder_id INT,
+    IN p_new_vehicle_id INT
+)
+BEGIN
+    -- Declare variables for error handling
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        -- Rollback transaction on error
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'Error: Failed to assign responder to vehicle';
+    END;
+    
+    -- Start transaction
+    START TRANSACTION;
+    
+    -- Delete old vehicle assignment if exists
+    DELETE FROM responder_vehicle
+    WHERE responder_id = p_responder_id;
+
+    DELETE FROM responder_vehicle
+    WHERE vehicle_id = p_new_vehicle_id;
+    
+    -- Insert new vehicle assignment
+    INSERT INTO responder_vehicle (vehicle_id, responder_id)
+    VALUES (p_new_vehicle_id, p_responder_id);
+    
+    -- Commit transaction
+    COMMIT;
+    
+END ;

@@ -449,6 +449,174 @@ def get_all_admin_users():
     except Exception as e:
         raise Exception(f"Failed to fetch admin users: {str(e)}")
 
+def get_average_response_time():
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    AVG(TIMESTAMPDIFF(MINUTE, time_reported, time_resolved)) AS avg_response_time
+                FROM incident
+                WHERE status = 'RESOLVED'
+            """)
+            
+            row = cursor.fetchone()
+            
+            return row[0] if row else None
+    except Exception as e:
+        raise Exception(f"Failed to fetch average response time: {str(e)}")
+    
+
+def get_max_response_time():
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    MAX(TIMESTAMPDIFF(MINUTE, time_reported, time_resolved)) AS avg_response_time
+                FROM incident
+                WHERE status = 'RESOLVED'
+            """)
+            
+            row = cursor.fetchone()
+            
+            return row[0] if row else None
+    except Exception as e:
+        raise Exception(f"Failed to fetch average response time: {str(e)}")
+
+def get_min_response_time():
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                SELECT 
+                    MIN(TIMESTAMPDIFF(MINUTE, time_reported, time_resolved)) AS avg_response_time
+                FROM incident
+                WHERE status = 'RESOLVED'
+            """)
+            
+            row = cursor.fetchone()
+            
+            return row[0] if row else None
+    except Exception as e:
+        raise Exception(f"Failed to fetch average response time: {str(e)}")
+
+def get_best_station():
+    try:
+        with connection.cursor() as crs:
+            crs.execute("""
+                        SELECT 
+                            s.station_id,
+                            s.type AS station_type,
+                            AVG(TIMESTAMPDIFF(SECOND, i.time_reported, i.time_resolved)) AS avg_response_time_seconds,
+                            COUNT(DISTINCT i.incident_id) AS total_incidents_resolved
+                        FROM station s
+                        INNER JOIN vehicle v ON s.station_id = v.station_id
+                        INNER JOIN dispatch d ON v.vehicle_id = d.vehicle_id
+                        INNER JOIN incident i ON d.incident_id = i.incident_id
+                        WHERE i.time_resolved IS NOT NULL
+                        GROUP BY s.station_id, s.type, s.zone
+                        ORDER BY avg_response_time_seconds ASC
+                        LIMIT 1;
+                        """)
+            row = crs.fetchone()
+            if row:
+                res ={
+                    "station_id" : row[0],
+                    "station_type": row[1],
+                    "average_response_time": row[2],
+                    "resolved_count" : row[3]
+                }
+                return res
+            return row if row else None
+    except Exception as e:
+            raise Exception(f"Failed to fetch average response time: {str(e)}")
+
+
+def get_worst_station():
+    try:
+        with connection.cursor() as crs:
+            crs.execute("""
+                        SELECT 
+                            s.station_id,
+                            s.type AS station_type,
+                            AVG(TIMESTAMPDIFF(SECOND, i.time_reported, i.time_resolved)) AS avg_response_time_seconds,
+                            COUNT(DISTINCT i.incident_id) AS total_incidents_resolved
+                        FROM station s
+                        INNER JOIN vehicle v ON s.station_id = v.station_id
+                        INNER JOIN dispatch d ON v.vehicle_id = d.vehicle_id
+                        INNER JOIN incident i ON d.incident_id = i.incident_id
+                        WHERE i.time_resolved IS NOT NULL
+                        GROUP BY s.station_id, s.type, s.zone
+                        ORDER BY avg_response_time_seconds DESC
+                        LIMIT 1;
+                        """)
+            row = crs.fetchone()
+            if row:
+                res ={
+                    "station_id" : row[0],
+                    "station_type": row[1],
+                    "average_response_time": row[2],
+                    "resolved_count" : row[3]
+                }
+                return res
+            return row if row else None
+    except Exception as e:
+            raise Exception(f"Failed to fetch average response time: {str(e)}")
+
+
+def assign_responder_to_vehicle (responder_id, new_vehicle_id):
+    """
+    Assign a responder to a new vehicle and remove old assignment
+    
+    Args:
+        connection: Active database connection
+        responder_id: ID of the responder
+        new_vehicle_id: ID of the new vehicle to assign
+        
+    Returns:
+        bool: True if assignment successful
+        
+    Raises:
+        Exception: If assignment fails
+    """
+    try:
+        with connection.cursor() as crs:
+            crs.callproc('assign_responder_to_vehicle', 
+                        [responder_id, new_vehicle_id])
+            connection.commit()
+            return True
+            
+    except Exception as e:
+        connection.rollback()
+        raise Exception(f"Failed to assign responder to vehicle: {str(e)}")
+
+
+
+def update_vehicles_to_on_route_by_incident(vehicle_id):
+    """
+    Update all PENDING vehicles for an incident to ON_ROUTE
+    
+    Args:
+        connection: Active database connection
+        incident_id: ID of the incident
+        
+    Returns:
+        int: Number of vehicles updated
+    """
+    try:
+        with connection.cursor() as crs:
+            crs.execute("""
+                UPDATE vehicle v
+                SET v.status = 'ON_ROUTE'
+                WHERE  v.vehicle_id= %s
+                AND v.status = 'PENDING'
+            """, (vehicle_id,))
+            
+            connection.commit()
+            return crs.rowcount
+            
+    except Exception as e:
+        connection.rollback()
+        raise Exception(f"Failed to update vehicles: {str(e)}")
+
 
 # ============= HELPER FUNCTIONS =============
 

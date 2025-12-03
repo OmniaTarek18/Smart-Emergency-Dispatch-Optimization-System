@@ -145,7 +145,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"refresh\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJlbWVyZ2VuY3lfZGlzcGF0Y2hlciIsImlhdCI6MTc2NDY5ODY2OCwiZXhwIjoxNzY1MzAzNDY4LCJ0eXBlIjoicmVmcmVzaCIsInVzZXJfaWQiOjEsInVzZXJfcm9sZSI6IkFETUlOIn0.uLRJgGsm1ZsQLY5_MiRUjMBV7bdTtkVly5eO2PJcBVk\"\n}",
+							"raw": "{\n    \"refresh\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJlbWVyZ2VuY3lfZGlzcGF0Y2hlciIsImlhdCI6MTc2NDc2MzczMCwiZXhwIjoxNzY0NzY0NjMwLCJ0eXBlIjoiYWNjZXNzIiwidXNlcl9pZCI6MywidXNlcl9yb2xlIjoiQURNSU4ifQ.ksZx5v7I0mgJp46M8Yc-Rqqc11Pdm4vBAZMm9uhzaWo\"\n}",
 							"options": {
 								"raw": {
 									"language": "text"
@@ -367,7 +367,13 @@
 					},
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJlbWVyZ2VuY3lfZGlzcGF0Y2hlciIsImlhdCI6MTc2NDc2Njk5NCwiZXhwIjoxNzY0Nzc1MDk0LCJ0eXBlIjoiYWNjZXNzIiwidXNlcl9pZCI6MywidXNlcl9yb2xlIjoiQURNSU4ifQ.mE-UVFYXZ1qa7zdKFgAfp-siGxIqFfjzIYaQrNp9-rc",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "",
@@ -404,7 +410,13 @@
 					},
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
 							"raw": "",
@@ -444,7 +456,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"type\": \"FIRE\",\r\n    \"lat\": 120.22123,\r\n    \"lng\": 44.233444,\r\n    \"severity_level\" : \"HIGH\"\r\n}",
+							"raw": "{\r\n    \"dispatch_id\": ,\r\n    \"new_vehicle_id\": 20\r\n\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -452,7 +464,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/incidents/report/",
+							"raw": "http://127.0.0.1:8000/admin/incidents/dispatch/",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -462,8 +474,9 @@
 							],
 							"port": "8000",
 							"path": [
+								"admin",
 								"incidents",
-								"report",
+								"dispatch",
 								""
 							]
 						}

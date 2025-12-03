@@ -4,8 +4,20 @@
 .analytics-container {
   min-height: 100vh;
   background: #f5f5f5;
-  width: 100%;
-  overflow-x: hidden;
+}
+
+.loading-state,
+.error-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 1.25rem;
+  color: #666;
+}
+
+.error-state {
+  color: #ef4444;
 }
 
 /* ============================
@@ -16,24 +28,18 @@
   border-bottom: 1px solid #e5e5e5;
   padding: 1rem 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  width: 100%;
 }
 
 .header-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  max-width: 1600px;
-  margin: 0 auto;
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 1rem;
-  flex-wrap: wrap;
 }
 
 .back-button {
@@ -46,7 +52,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
 }
 
 .back-button:hover {
@@ -59,14 +64,14 @@
 }
 
 .header-title {
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0;
   color: #222;
 }
 
 .header-subtitle {
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-size: 0.875rem;
   color: #666;
   margin: 0;
 }
@@ -75,14 +80,10 @@
    CONTENT AREA
 ============================ */
 .analytics-content {
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: clamp(1rem, 2vw, 1.5rem);
-  max-width: 1600px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
+  gap: 1.5rem;
 }
 
 /* ============================
@@ -90,18 +91,17 @@
 ============================ */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
-  gap: clamp(0.75rem, 2vw, 1rem);
-  width: 100%;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -111,10 +111,9 @@
   background: #fff;
   border: 1px solid #e5e5e5;
   border-radius: 10px;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
-  min-width: 0;
 }
 
 .stat-card:hover {
@@ -127,23 +126,18 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  gap: 0.5rem;
 }
 
 .card-title {
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-size: 0.875rem;
   font-weight: 500;
   color: #666;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .card-icon {
   width: 16px;
   height: 16px;
   color: #999;
-  flex-shrink: 0;
 }
 
 .card-content {
@@ -153,16 +147,170 @@
 }
 
 .stat-value {
-  font-size: clamp(1.5rem, 3vw, 1.875rem);
+  font-size: 1.875rem;
   font-weight: 700;
   color: #222;
-  word-break: break-word;
 }
 
 .stat-description {
-  font-size: clamp(0.7rem, 1.2vw, 0.75rem);
+  font-size: 0.75rem;
   color: #999;
   margin: 0;
+}
+
+/* ============================
+   PERFORMERS GRID
+============================ */
+.performers-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .performers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.performer-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.performer-card.best {
+  border-left: 4px solid #22c55e;
+}
+
+.performer-card.worst {
+  border-left: 4px solid #f59e0b;
+}
+
+.performer-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.performer-icon {
+  width: 32px;
+  height: 32px;
+  color: #666;
+}
+
+.performer-card.best .performer-icon {
+  color: #22c55e;
+}
+
+.performer-card.worst .performer-icon {
+  color: #f59e0b;
+}
+
+.performer-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+.performer-subtitle {
+  font-size: 0.875rem;
+  color: #999;
+  margin: 0;
+}
+
+.performer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.performer-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0;
+}
+
+.performer-email {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+}
+
+.performer-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.performer-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.performer-stat .stat-label {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.performer-stat .stat-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #222;
+}
+
+/* ============================
+   STATION GRID
+============================ */
+.station-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .station-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.station-card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.station-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.station-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.station-stat .stat-label {
+  font-size: 0.875rem;
+  color: #666;
+}
+
+.station-stat .stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #222;
 }
 
 /* ============================
@@ -170,9 +318,8 @@
 ============================ */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
-  gap: clamp(1rem, 2vw, 1.5rem);
-  width: 100%;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1.5rem;
 }
 
 @media (min-width: 1024px) {
@@ -185,33 +332,30 @@
   background: #fff;
   border: 1px solid #e5e5e5;
   border-radius: 10px;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  min-width: 0;
-  overflow: hidden;
 }
 
 .chart-header {
-  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  margin-bottom: 1.5rem;
 }
 
 .chart-title {
-  font-size: clamp(1rem, 2vw, 1.125rem);
+  font-size: 1.125rem;
   font-weight: 600;
   color: #222;
   margin: 0 0 0.25rem 0;
 }
 
 .chart-description {
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-size: 0.875rem;
   color: #999;
   margin: 0;
 }
 
 .chart-content {
   width: 100%;
-  height: clamp(250px, 40vw, 300px);
-  min-height: 200px;
+  height: 300px;
 }
 
 /* ============================
@@ -221,138 +365,108 @@
   background: #fff;
   border: 1px solid #e5e5e5;
   border-radius: 10px;
-  padding: clamp(1rem, 2vw, 1.5rem);
+  padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  min-width: 0;
 }
 
-.vehicle-grid {
+/* ============================
+   INCIDENT BREAKDOWN
+============================ */
+.incident-breakdown {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-  gap: clamp(0.75rem, 2vw, 1rem);
+  grid-template-columns: repeat(1, 1fr);
+  gap: 1rem;
 }
 
-@media (min-width: 640px) {
-  .vehicle-grid {
-    grid-template-columns: repeat(2, 1fr);
+@media (min-width: 768px) {
+  .incident-breakdown {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (min-width: 1024px) {
-  .vehicle-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.vehicle-status-box {
-  padding: clamp(0.75rem, 2vw, 1rem);
+.incident-type-box {
+  padding: 1rem;
   border: 1px solid #e5e5e5;
   border-radius: 8px;
-  transition: all 0.2s ease;
-  text-align: center;
-  min-width: 0;
-}
-
-.vehicle-status-box:hover {
   background: #f9f9f9;
-  border-color: #ccc;
 }
 
-.status-label {
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  font-weight: 500;
-  text-transform: capitalize;
-  margin: 0 0 0.5rem 0;
-  color: #666;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.status-count {
-  font-size: clamp(1.5rem, 3vw, 1.875rem);
-  font-weight: 700;
-  margin: 0;
+.incident-type-title {
+  font-size: 1rem;
+  font-weight: 600;
   color: #222;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+.incident-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.incident-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.incident-stat-label {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.incident-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.incident-stat-value.resolved {
+  color: #22c55e;
+}
+
+.incident-stat-value.assigned {
+  color: #3b82f6;
+}
+
+.incident-stat-value.reported {
+  color: #f59e0b;
 }
 
 /* ============================
    RESPONSIVE ADJUSTMENTS
 ============================ */
-@media (max-width: 480px) {
-  .analytics-header {
-    padding: 0.75rem 1rem;
-  }
-
-  .header-left {
-    gap: 0.5rem;
-  }
-
-  .stats-grid,
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .vehicle-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .chart-content {
-    height: 200px;
-  }
-}
-
-@media (min-width: 481px) and (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .vehicle-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1023px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .charts-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .vehicle-grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-@media (min-width: 1600px) {
+@media (max-width: 768px) {
   .analytics-content {
-    padding: 2rem;
-  }
-}
-
-/* ============================
-   PRINT STYLES
-============================ */
-@media print {
-  .analytics-container {
-    background: white;
-  }
-
-  .back-button {
-    display: none;
+    padding: 1rem;
   }
 
   .stat-card,
   .chart-card,
-  .vehicle-card {
-    break-inside: avoid;
-    page-break-inside: avoid;
+  .vehicle-card,
+  .performer-card,
+  .station-card {
+    padding: 1rem;
+  }
+
+  .header-title {
+    font-size: 1.25rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .performer-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .station-stats {
+    grid-template-columns: 1fr;
   }
 }

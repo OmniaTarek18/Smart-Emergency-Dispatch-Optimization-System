@@ -370,7 +370,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": 3\r\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -403,11 +403,11 @@
 						"disableBodyPruning": true
 					},
 					"request": {
-						"method": "POST",
+						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"type\": \"FIRE\",\r\n    \"lat\": 120.22123,\r\n    \"lng\": 44.233444,\r\n    \"severity_level\" : \"HIGH\"\r\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -415,7 +415,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/incidents/report/",
+							"raw": "http://127.0.0.1:8000/admin/vehicles/",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -425,8 +425,8 @@
 							],
 							"port": "8000",
 							"path": [
-								"incidents",
-								"report",
+								"admin",
+								"vehicles",
 								""
 							]
 						}

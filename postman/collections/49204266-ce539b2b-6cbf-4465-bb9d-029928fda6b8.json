@@ -519,7 +519,7 @@
 					"response": []
 				},
 				{
-					"name": "Get Dispatch Copy",
+					"name": "Create Vehicle",
 					"id": "49204266-45b4dfac-367a-4fc9-a494-5c8deb785a5c",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true

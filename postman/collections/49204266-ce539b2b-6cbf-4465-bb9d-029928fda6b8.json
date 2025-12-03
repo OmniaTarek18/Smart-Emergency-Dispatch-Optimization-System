@@ -400,7 +400,7 @@
 					"response": []
 				},
 				{
-					"name": "analysis",
+					"name": "Analysis",
 					"id": "49204266-9eb021b8-6f5f-40dd-a208-e69317b39d13",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true

@@ -28,8 +28,11 @@ const LogIn = () => {
         email: email,
         password: password,
       });
-      if (response.status === 200) {
+      if (response.data) {
        console.log("Login successful:", response.data);
+       localStorage.setItem("access_token", response.data.access_token);
+       localStorage.setItem("refresh_token", response.data.refresh_token);
+      //  navigate("/");
       }
     } catch (err) {
       console.error("Login failed:", err);

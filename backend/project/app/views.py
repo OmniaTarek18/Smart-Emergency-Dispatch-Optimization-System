@@ -284,7 +284,7 @@ def resolve_incident_endpoint(request):
 # ============= ADMIN/DISPATCHER APIS =============
 
 @csrf_exempt
-# @auth_user
+@auth_user
 def list_incidents(request):
     """Admin/Dispatcher API: List all incidents"""
     err = check_request_method(request, "GET")
@@ -292,9 +292,9 @@ def list_incidents(request):
         return JsonResponse({"message": str(err)}, status=400)
 
     try:
-        # user = get_user_by_user_id(request.user_id)
-        # if user['role'] not in ['ADMIN', 'DISPATCHER']:
-        #     return JsonResponse({"message": "Unauthorized"}, status=403)
+        user = get_user_by_user_id(request.user_id)
+        if user['role'] not in ['ADMIN', 'DISPATCHER']:
+            return JsonResponse({"message": "Unauthorized"}, status=403)
         
         status = request.GET.get('status', None)
         if status:

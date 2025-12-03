@@ -562,6 +562,198 @@ def get_worst_station():
             raise Exception(f"Failed to fetch average response time: {str(e)}")
 
 
+def get_best_responder():
+    """
+    Get the responder with minimum average response time
+    
+    Args:
+        connection: Active database connection
+        
+    Returns:
+        dict: Responder details with response time metrics, or None if no data
+        
+    Raises:
+        Exception: If database query fails
+    """
+    try:
+        with connection.cursor() as crs:
+            crs.execute("""
+                SELECT 
+                    u.user_id AS responder_id,
+                    u.name AS responder_name,
+                    u.email,
+                    AVG(TIMESTAMPDIFF(SECOND, i.time_reported, i.time_resolved)) AS avg_response_time_seconds,
+                    COUNT(DISTINCT i.incident_id) AS total_incidents_resolved
+                FROM user u
+                INNER JOIN responder_vehicle rv ON u.user_id = rv.responder_id
+                INNER JOIN vehicle v ON rv.vehicle_id = v.vehicle_id
+                INNER JOIN dispatch d ON v.vehicle_id = d.vehicle_id
+                INNER JOIN incident i ON d.incident_id = i.incident_id
+                WHERE u.role = 'RESPONDER'
+                AND i.time_resolved IS NOT NULL
+                GROUP BY u.user_id, u.name, u.email
+                ORDER BY avg_response_time_seconds ASC
+                LIMIT 1
+            """)
+            
+            row = crs.fetchone()
+            
+            if row:
+                return {
+                    'responder_id': row[0],
+                    'responder_name': row[1],
+                    'email': row[2],
+                    'avg_response_time_minutes': round(float(row[3]) / 60, 2),
+                    'total_incidents_resolved': row[4]
+                }
+            return None
+            
+    except Exception as e:
+        raise Exception(f"Failed to fetch best responder: {str(e)}")
+
+
+def get_worst_responder():
+    """
+    Get the responder with minimum average response time
+    
+    Args:
+        connection: Active database connection
+        
+    Returns:
+        dict: Responder details with response time metrics, or None if no data
+        
+    Raises:
+        Exception: If database query fails
+    """
+    try:
+        with connection.cursor() as crs:
+            crs.execute("""
+                SELECT 
+                    u.user_id AS responder_id,
+                    u.name AS responder_name,
+                    u.email,
+                    AVG(TIMESTAMPDIFF(SECOND, i.time_reported, i.time_resolved)) AS avg_response_time_seconds,
+                    COUNT(DISTINCT i.incident_id) AS total_incidents_resolved
+                FROM user u
+                INNER JOIN responder_vehicle rv ON u.user_id = rv.responder_id
+                INNER JOIN vehicle v ON rv.vehicle_id = v.vehicle_id
+                INNER JOIN dispatch d ON v.vehicle_id = d.vehicle_id
+                INNER JOIN incident i ON d.incident_id = i.incident_id
+                WHERE u.role = 'RESPONDER'
+                AND i.time_resolved IS NOT NULL
+                GROUP BY u.user_id, u.name, u.email
+                ORDER BY avg_response_time_seconds DESC
+                LIMIT 1
+            """)
+            
+            row = crs.fetchone()
+            
+            if row:
+                return {
+                    'responder_id': row[0],
+                    'responder_name': row[1],
+                    'email': row[2],
+                    'avg_response_time_seconds': float(row[3]),
+                    'avg_response_time_minutes': round(float(row[3]) / 60, 2),
+                    'total_incidents_resolved': row[4]
+                }
+            return None
+            
+    except Exception as e:
+        raise Exception(f"Failed to fetch best responder: {str(e)}")
+
+
+def get_incidents_by_type_detailed():
+    """
+    Get detailed statistics of incidents for each type including all statuses
+    
+    Args:
+        connection: Active database connection
+        
+    Returns:
+        list: List of dictionaries with comprehensive incident statistics
+        
+    Raises:
+        Exception: If database query fails
+    """
+    try:
+        with connection.cursor() as crs:
+            crs.execute("""
+                SELECT 
+                    type,
+                    COUNT(CASE WHEN status = 'RESOLVED' THEN 1 END) AS resolved_count,
+                    COUNT(CASE WHEN status = 'ASSIGNED' THEN 1 END) AS assigned_count,
+                    COUNT(CASE WHEN status = 'REPORTED' THEN 1 END) AS reported_count,
+                    COUNT(*) AS total_count,
+                    COUNT(CASE WHEN status = 'RESOLVED' THEN 1 END) * 100.0 / COUNT(*) AS resolution_rate_percentage,
+                    AVG(CASE WHEN status = 'RESOLVED' THEN TIMESTAMPDIFF(SECOND, time_reported, time_resolved) END) AS avg_resolution_time_seconds
+                FROM incident
+                GROUP BY type
+                ORDER BY resolved_count DESC
+            """)
+            
+            rows = crs.fetchall()
+            
+            results = []
+            for row in rows:
+                avg_time = float(row[6]) if row[6] else 0
+                results.append({
+                    'type': row[0],
+                    'resolved_count': row[1],
+                    'assigned_count': row[2],
+                    'reported_count': row[3],
+                    'total_count': row[4],
+                    'resolution_rate_percentage': round(float(row[5]), 2),
+                    'avg_resolution_time_seconds': round(avg_time, 2),
+                    'avg_resolution_time_minutes': round(avg_time / 60, 2)
+                })
+            
+            return results
+            
+    except Exception as e:
+        raise Exception(f"Failed to fetch incidents by type: {str(e)}")
+    
+
+def get_vehicle_count_by_type():
+    """
+    Get the count of vehicles for each station type
+    
+    Args:
+        connection: Active database connection
+        
+    Returns:
+        list: List of dictionaries with station type and vehicle count
+        
+    Raises:
+        Exception: If database query fails
+    """
+    try:
+        with connection.cursor() as crs:
+            crs.execute("""
+                SELECT 
+                    s.type AS station_type,
+                    COUNT(v.vehicle_id) AS vehicle_count
+                FROM station s
+                LEFT JOIN vehicle v ON s.station_id = v.station_id
+                GROUP BY s.type
+                ORDER BY vehicle_count DESC
+            """)
+            
+            rows = crs.fetchall()
+            
+            results = []
+            for row in rows:
+                results.append({
+                    'station_type': row[0],
+                    'vehicle_count': row[1]
+                })
+            
+            return results
+            
+    except Exception as e:
+        raise Exception(f"Failed to fetch vehicle count by type: {str(e)}")
+
+
 def assign_responder_to_vehicle (responder_id, new_vehicle_id):
     """
     Assign a responder to a new vehicle and remove old assignment

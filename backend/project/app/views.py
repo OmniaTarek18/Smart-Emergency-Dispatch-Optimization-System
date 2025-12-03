@@ -614,14 +614,12 @@ def get_analytics(request):
         analytics["average_response_time"] = get_average_response_time()
         analytics["max_response_time"] = get_max_response_time()
         analytics["min_response_time"] = get_min_response_time()
-        analytics["best_responder"] = ""
-        analytics["worst_responder"] = ""
+        analytics["best_responder"] = get_best_responder()
+        analytics["worst_responder"] = get_worst_responder()
         analytics["best_station"] = get_best_station()
         analytics["worst_station"] = get_worst_station()
-        analytics["total_incidents_type"] = ""
-        analytics["resolved_incidents_type"] = ""
-        analytics["active_vehicles_type"] = ""
-        analytics["response_time_type"] = ""
+        analytics["total_incidents_type"] = get_incidents_by_type_detailed()
+        analytics["active_vehicles_type"] = get_vehicle_count_by_type()
 
         
         return JsonResponse({

@@ -303,6 +303,25 @@ def delete_vehicle(vehicle_id):
 
 # ============= DISPATCH MANAGEMENT =============
 
+def reassign_dispatch(incident_id, vehicle_id, dispatcher_id):
+    """Assign vehicle to incident using stored procedure"""
+    try:
+        with connection.cursor() as cursor:
+            cursor.callproc('reassign_incident_vehicle', [
+                incident_id,
+                vehicle_id,
+                dispatcher_id,
+              
+            ])
+            
+            # Fetch result
+            cursor.execute("SELECT @_reassign_incident_vehicle_3")
+            result = cursor.fetchone()
+
+            return get_incident_by_id(incident_id)
+    except Exception as e:
+        raise Exception(f"Failed to assign vehicle: {str(e)}")
+
 def modify_dispatch(dispatch_id, new_vehicle_id, dispatcher_id):
     """Modify dispatch using stored procedure"""
     try:

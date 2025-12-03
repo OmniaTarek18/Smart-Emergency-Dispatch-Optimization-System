@@ -20,12 +20,12 @@ urlpatterns = [
     # Admin/Dispatcher - Incident Management
     path('admin/incidents/', views.list_incidents, name='list_incidents'),
     path('admin/incidents/dispatch/', views.dispatch_incident, name='dispatch_incident'),
-    path('admin/incidents/<int:incident_id>/dispatches/', views.get_incident_dispatches, name='get_incident_dispatches'),
+    path('admin/incidents/dispatches/get-dispatch', views.get_incident_dispatches, name='get_incident_dispatches'),
     
     # Admin/Dispatcher - Vehicle Management
     path('admin/vehicles/', views.list_vehicles, name='list_vehicles'),
     path('admin/vehicles/create/', views.create_vehicle_endpoint, name='create_vehicle'),
-    path('admin/vehicles/<int:vehicle_id>/', views.delete_vehicle_endpoint, name='delete_vehicle'),
+    path('admin/vehicles/delete/', views.delete_vehicle_endpoint, name='delete_vehicle'),
     
     # Admin/Dispatcher - Station Management
     path('admin/stations/', views.list_stations, name='list_stations'),

@@ -219,3 +219,71 @@ BEGIN
 END ;
 
 
+
+CREATE PROCEDURE reassign_incident_vehicle(
+    IN p_incident_id INT,
+    IN p_new_vehicle_id INT,
+    IN p_dispatcher_id INT
+)
+BEGIN
+    DECLARE v_status VARCHAR(20);
+    DECLARE v_old_vehicle_id INT;
+
+    START TRANSACTION;
+
+    -- Lock incident
+    SELECT status INTO v_status
+    FROM incident
+    WHERE incident_id = p_incident_id
+    FOR UPDATE;
+
+    IF v_status = 'RESOLVED' THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Cannot reassign a resolved incident';
+    END IF;
+
+    -- Lock new vehicle and check availability
+    SELECT status INTO v_status
+    FROM vehicle
+    WHERE vehicle_id = p_new_vehicle_id
+    FOR UPDATE;
+
+    IF v_status != 'AVAILABLE' THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'New vehicle is not available';
+    END IF;
+
+    -- Find old vehicle assigned to the incident
+    SELECT vehicle_id INTO v_old_vehicle_id
+    FROM dispatch
+    WHERE incident_id = p_incident_id
+    LIMIT 1;
+
+    -- If an old assignment exists → remove it
+    IF v_old_vehicle_id IS NOT NULL THEN
+        
+        -- Free old vehicle
+        UPDATE vehicle SET status = 'AVAILABLE'
+        WHERE vehicle_id = v_old_vehicle_id;
+
+        -- Delete old dispatch
+        DELETE FROM dispatch
+        WHERE incident_id = p_incident_id;
+    END IF;
+
+    -- Insert new dispatch
+    INSERT INTO dispatch (vehicle_id, incident_id, dispatcher_id)
+    VALUES (p_new_vehicle_id, p_incident_id, p_dispatcher_id);
+
+    -- Set new vehicle to PENDING
+    UPDATE vehicle SET status = 'PENDING'
+    WHERE vehicle_id = p_new_vehicle_id;
+
+    -- Mark incident as ASSIGNED
+    UPDATE incident SET status = 'ASSIGNED'
+    WHERE incident_id = p_incident_id;
+
+    COMMIT;
+END;

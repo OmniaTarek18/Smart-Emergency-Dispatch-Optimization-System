@@ -5,15 +5,7 @@ from django.db import connection
 from .hasher import hash_password, check_password
 from .jwt_utils import generate_access_token, generate_refresh_token, refresh_access_token
 from .auth import auth_user 
-from .repo import (
-    update_user_password, get_user_by_email, get_user_by_user_id,
-    create_incident, get_all_incidents, get_incident_by_id, resolve_incident,
-    get_all_vehicles, get_vehicle_by_id, update_vehicle_location, 
-    create_vehicle, delete_vehicle,
-    modify_dispatch, get_dispatch_by_incident,
-    get_all_stations, create_station,
-    create_admin_user, get_all_admin_users
-)
+from .repo import *
 import json
 
 
@@ -292,7 +284,7 @@ def resolve_incident_endpoint(request):
 # ============= ADMIN/DISPATCHER APIS =============
 
 @csrf_exempt
-@auth_user
+# @auth_user
 def list_incidents(request):
     """Admin/Dispatcher API: List all incidents"""
     err = check_request_method(request, "GET")
@@ -300,9 +292,9 @@ def list_incidents(request):
         return JsonResponse({"message": str(err)}, status=400)
 
     try:
-        user = get_user_by_user_id(request.user_id)
-        if user['role'] not in ['ADMIN', 'DISPATCHER']:
-            return JsonResponse({"message": "Unauthorized"}, status=403)
+        # user = get_user_by_user_id(request.user_id)
+        # if user['role'] not in ['ADMIN', 'DISPATCHER']:
+        #     return JsonResponse({"message": "Unauthorized"}, status=403)
         
         status = request.GET.get('status', None)
         if status:
@@ -317,7 +309,6 @@ def list_incidents(request):
         
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=500)
-
 
 @csrf_exempt
 @auth_user
@@ -334,15 +325,15 @@ def dispatch_incident(request):
         
         data = json.loads(request.body)
         
-        required_fields = ['dispatch_id', 'new_vehicle_id']
+        required_fields = ['incident_id', 'new_vehicle_id']
         for field in required_fields:
             if field not in data:
                 return JsonResponse({"message": f"Missing required field: {field}"}, status=400)
         
         # Use stored procedure to modify dispatch
-        incident = modify_dispatch(
-            dispatch_id=data['dispatch_id'],
-            new_vehicle_id=data['new_vehicle_id'],
+        incident = reassign_dispatch(
+            incident_id=data['incident_id'],
+            vehicle_id=data['new_vehicle_id'],
             dispatcher_id=request.user_id
         )
         
@@ -357,7 +348,7 @@ def dispatch_incident(request):
 
 @csrf_exempt
 @auth_user
-def get_incident_dispatches(request, incident_id):
+def get_incident_dispatches(request):
     """Get dispatch information for an incident"""
     err = check_request_method(request, "GET")
     if err:
@@ -367,6 +358,9 @@ def get_incident_dispatches(request, incident_id):
         user = get_user_by_user_id(request.user_id)
         if user['role'] not in ['ADMIN', 'DISPATCHER']:
             return JsonResponse({"message": "Unauthorized"}, status=403)
+        
+        data = json.loads(request.body)
+        incident_id = data.get('incident_id', None)
         
         dispatches = get_dispatch_by_incident(incident_id)
         
@@ -403,7 +397,7 @@ def list_vehicles(request):
             "vehicles": vehicles,
             "count": len(vehicles)
         }, status=200)
-        
+       
     except Exception as e:
         return JsonResponse({"message": str(e)}, status=500)
 
@@ -446,7 +440,7 @@ def create_vehicle_endpoint(request):
 
 @csrf_exempt
 @auth_user
-def delete_vehicle_endpoint(request, vehicle_id):
+def delete_vehicle_endpoint(request):
     """Admin API: Delete vehicle"""
     err = check_request_method(request, "DELETE")
     if err:
@@ -456,6 +450,11 @@ def delete_vehicle_endpoint(request, vehicle_id):
         user = get_user_by_user_id(request.user_id)
         if user['role'] != 'ADMIN':
             return JsonResponse({"message": "Unauthorized - Admin only"}, status=403)
+        data = json.loads(request.body)
+
+        vehicle_id = data.get('vehicle_id', None)
+        if vehicle_id is None:
+            return JsonResponse({"message": "Missing vehicle_id"}, status=400)
         
         delete_vehicle(vehicle_id)
         

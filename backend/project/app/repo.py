@@ -49,23 +49,27 @@ def get_user_by_email(email):
     # ============= INCIDENT MANAGEMENT =============
 
 def create_incident(incident_type, location_lat, location_lng, severity, description=None):
-    """Create a new incident and automatically assign nearest vehicle"""
     try:
         with connection.cursor() as cursor:
-            # Call stored procedure to handle incident creation and auto-assignment
-            cursor.callproc('handle_new_incident', [
-                f'POINT({location_lng} {location_lat})',  # Note: POINT(lng, lat) in MySQL
-                severity,
-                incident_type,
-                0  # OUT parameter placeholder
-            ])
             
-            # Fetch the result (assigned vehicle_id)
-            cursor.execute("SELECT @_handle_new_incident_3")
-            result = cursor.fetchone()
-            vehicle_id = result[0] if result else None
+            # Call stored procedure with real geometry expression
+            cursor.execute(
+                """
+                CALL handle_new_incident(
+                    ST_GeomFromText(%s, 4326),
+                    %s,
+                    %s,
+                    @vehicle_id
+                )
+                """,
+                (f"POINT({location_lng} {location_lat})", severity, incident_type)
+            )
             
-            # Get the created incident
+            # Get OUT param
+            cursor.execute("SELECT @vehicle_id")
+            vehicle_id = cursor.fetchone()[0]
+
+            # Get latest incident
             cursor.execute("""
                 SELECT i.incident_id, i.time_reported, 
                        ST_X(i.location) as lng, ST_Y(i.location) as lat,
@@ -82,9 +86,10 @@ def create_incident(incident_type, location_lat, location_lng, severity, descrip
             
             row = cursor.fetchone()
             return zip_incident(row, cursor.description)
-            
+
     except Exception as e:
         raise Exception(f"Failed to create incident: {str(e)}")
+
 
 
 def get_all_incidents(status=None):

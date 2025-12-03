@@ -180,7 +180,7 @@ def refresh_token(request):
     try:
         new_access_token = refresh_access_token(refresh_token)
     except Exception as e:
-        return JsonResponse({'message': str(e)}, 500)
+        return JsonResponse({'message': str(e)}, status=500)
     return JsonResponse({"access_token": new_access_token}, status=200)
 
 

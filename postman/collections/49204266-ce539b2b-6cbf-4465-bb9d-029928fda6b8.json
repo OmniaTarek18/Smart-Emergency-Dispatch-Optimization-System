@@ -424,7 +424,7 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8000/admin/incidents/",
+							"raw": "http://127.0.0.1:8000/admin/analytics/",
 							"protocol": "http",
 							"host": [
 								"127",
@@ -435,7 +435,7 @@
 							"port": "8000",
 							"path": [
 								"admin",
-								"incidents",
+								"analytics",
 								""
 							]
 						}

@@ -475,39 +475,29 @@
 		}
 	],
 	"auth": {
-		"type": "apikey",
-		"apikey": [
-			{
-				"key": "key",
-				"value": "X-API-Key",
-				"type": "string"
-			},
-			{
-				"key": "value",
-				"value": "{{token}}",
-				"type": "string"
-			}
-		]
+		"type": "bearer"
 	},
 	"event": [
 		{
 			"listen": "prerequest",
 			"script": {
+				"id": "e2976e59-016e-41a4-b408-1c92143f48ec",
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					""
-				],
-				"id": "ff9a1164-ea19-4cd0-81bb-528f99d334e2"
+				]
 			}
 		},
 		{
 			"listen": "test",
 			"script": {
+				"id": "673e44fb-ca5c-4965-ad6b-3c79c9ecde19",
 				"type": "text/javascript",
+				"requests": {},
 				"exec": [
 					""
-				],
-				"id": "e64dbff4-7916-4ac6-8dbf-389a73689d21"
+				]
 			}
 		}
 	],

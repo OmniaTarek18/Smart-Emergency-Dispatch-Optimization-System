@@ -24,11 +24,20 @@ export default function Dispatcher() {
   ]);
 
   const [focusedLocation, setFocusedLocation] = useState(null);
+  const [pickedLocation, setPickedLocation] = useState(null);
+
+  const [isAddingIncident, setIsAddingIncident] = useState(false);
+  const [isAddingCar, setIsAddingCar] = useState(false);
+  const [isAddingStation, setIsAddingStation] = useState(false);
 
  
 
   const handleLocate = (lat, lng) => {
     setFocusedLocation({ lat, lng, timestamp: Date.now() }); // Timestamp ensures unique updates even if clicking same spot
+  };
+
+  const handleMapClick = (lngLat) => {
+    setPickedLocation(lngLat);
   };
 
   const assignUnit = (incidentId, carId) => {
@@ -108,11 +117,6 @@ export default function Dispatcher() {
     }, []);
 
 
-    
-    
-        
-
-
   return (
     <div className="dispatcher-layout" style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
       <div style={{ width: "400px", zIndex: 20, boxShadow: "2px 0 10px rgba(0,0,0,0.1)" }}>
@@ -122,6 +126,14 @@ export default function Dispatcher() {
             allIncidents={incidents}
             onAssign={assignUnit}
             onLocate={handleLocate} // Pass the function down
+            pickedLocation={pickedLocation}
+            clearPickedLocation={() => setPickedLocation(null)}
+            isAddingCar={isAddingCar}
+            isAddingIncident={isAddingIncident}
+            isAddingStation={isAddingStation}
+            setIsAddingCar={setIsAddingCar}
+            setIsAddingIncident={setIsAddingIncident}
+            setIsAddingStation={setIsAddingStation}
         />
       </div>
 
@@ -130,8 +142,12 @@ export default function Dispatcher() {
             stations={stations} 
             cars={cars}
             allIncidents={incidents} 
-            // route={route} 
-            focusedLocation={focusedLocation} // Pass the state down
+            focusedLocation={focusedLocation} 
+            onMapClick={handleMapClick}
+            pickedLocation={pickedLocation}
+            isAddingCar={isAddingCar}
+            isAddingIncident={isAddingIncident}
+            isAddingStation={isAddingStation}
         />
       </div>
     </div>

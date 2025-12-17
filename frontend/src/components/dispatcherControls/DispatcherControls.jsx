@@ -1,4 +1,4 @@
-import React, { act, useState } from "react";
+import React, { act, useState,useEffect } from "react";
 import "./DispatcherControls.css";
 import axios from "axios";
 
@@ -8,17 +8,23 @@ export default function DispatcherControls({
   allIncidents,
   onAssign,
   onLocate,
-  onAddIncident, // New Prop
-  onAddVehicle, // New Prop
-  onAddStation, // New Prop
+  onAddIncident,
+  onAddVehicle, 
+  onAddStation, 
+  pickedLocation,
+  clearPickedLocation,
+  isAddingCar,
+  isAddingIncident,
+  isAddingStation,
+  setIsAddingCar,
+  setIsAddingIncident,
+  setIsAddingStation,
 }) {
   const [activeTab, setActiveTab] = useState("incidents");
   const [selectedIncidentId, setSelectedIncidentId] = useState(null);
 
   // Toggle States
-  const [isAddingIncident, setIsAddingIncident] = useState(false);
-  const [isAddingCar, setIsAddingCar] = useState(false);
-  const [isAddingStation, setIsAddingStation] = useState(false);
+  
 
   // Form States
   const [incidentForm, setIncidentForm] = useState({
@@ -46,30 +52,41 @@ export default function DispatcherControls({
     return "#388e3c";
   };
 
-  // --- HELPERS ---
-  const validateLatLng = (lat, lng) => {
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    if (isNaN(latNum) || latNum < -90 || latNum > 90) {
-      alert("Latitude must be between -90 and 90");
-      return false;
-    }
-    if (isNaN(lngNum) || lngNum < -180 || lngNum > 180) {
-      alert("Longitude must be between -180 and 180");
-      return false;
-    }
-    return true;
-  };
+  
 
   const handleInputChange = (setter) => (e) => {
     const { name, value } = e.target;
     setter((prev) => ({ ...prev, [name]: value }));
   };
 
+  useEffect(() => {
+    if (pickedLocation && isAddingIncident) {
+      setIncidentForm(prev => ({
+        ...prev,
+        lat: pickedLocation.lat.toFixed(6),
+        lng: pickedLocation.lng.toFixed(6)
+      }));
+    }
+    if (pickedLocation && isAddingCar) {
+      setCarForm(prev => ({
+        ...prev,
+        lat: pickedLocation.lat.toFixed(6),
+        lng: pickedLocation.lng.toFixed(6)
+      }));
+    }
+    if (pickedLocation && isAddingStation) {
+      setStationForm(prev => ({
+        ...prev,
+        lat: pickedLocation.lat.toFixed(6),
+        lng: pickedLocation.lng.toFixed(6)
+      }));
+    }
+  }, [pickedLocation]);
+
   // --- SUBMIT HANDLERS ---
   const handleSubmitIncident = (e) => {
     e.preventDefault();
-    if (!validateLatLng(incidentForm.lat, incidentForm.lng)) return;
+    
 
     axios
       .post(
@@ -88,20 +105,21 @@ export default function DispatcherControls({
       )
       .then((response) => {
         console.log("Incident reported:", response.data);
-        if (onAddIncident) onAddIncident(response.data); // Notify parent
+        if (onAddIncident) onAddIncident(response.data);
+        clearPickedLocation();
+        setIncidentForm({ type: "POLICE", severity: "MEDIUM", lat: "", lng: "" });
+        setIsAddingIncident(false);
       })
       .catch((error) => {
         console.error("Error reporting incident:", error);
       });
 
-    // Reset & Close
-    setIncidentForm({ type: "POLICE", severity: "MEDIUM", lat: "", lng: "" });
-    setIsAddingIncident(false);
+    
   };
 
   const handleSubmitCar = (e) => {
     e.preventDefault();
-    if (!validateLatLng(carForm.lat, carForm.lng)) return;
+    
 
     axios
       .post(
@@ -121,18 +139,20 @@ export default function DispatcherControls({
       .then((response) => {
         console.log("Vehicle added:", response.data);
         if (onAddVehicle) onAddVehicle(response.data); // Notify parent
+        clearPickedLocation();
+        setCarForm({ stationId: "", capacity: 1, lat: "", lng: "" });
+        setIsAddingCar(false);
       })
       .catch((error) => {
         console.error("Error adding vehicle:", error);
       });
 
-    setCarForm({ stationId: "", capacity: 1, lat: "", lng: "" });
-    setIsAddingCar(false);
+    
   };
 
   const handleSubmitStation = (e) => {
     e.preventDefault();
-    if (!validateLatLng(stationForm.lat, stationForm.lng)) return;
+    
 
     axios
       .post(
@@ -152,13 +172,15 @@ export default function DispatcherControls({
       .then((response) => {
         console.log("Station added:", response.data);
         if (onAddStation) onAddStation(response.data); // Notify parent
+        clearPickedLocation();
+        setStationForm({ type: "POLICE", zone: "", lat: "", lng: "" });
+        setIsAddingStation(false);
       })
       .catch((error) => {
         console.error("Error adding station:", error);
       });
 
-    setStationForm({ type: "POLICE", zone: "", lat: "", lng: "" });
-    setIsAddingStation(false);
+    
   };
 
   const deleteCar = async (carId) => {
@@ -363,6 +385,10 @@ export default function DispatcherControls({
               <form className="add-form" onSubmit={handleSubmitIncident}>
                 <h3>Report New Incident</h3>
 
+                <p style={{ fontSize: "12px", color: "#666" }}>
+                  Tip: Click anywhere on the map to set the location.
+                </p>
+
                 <label>Type</label>
                 <select
                   name="type"
@@ -394,8 +420,8 @@ export default function DispatcherControls({
                       step="any"
                       name="lat"
                       required
-                      min="-90"
-                      max="90"
+                      readOnly // NEW: Make read-only to encourage map use
+                      style={{ backgroundColor: "#f0f0f0" }}
                       value={incidentForm.lat}
                       onChange={handleInputChange(setIncidentForm)}
                     />
@@ -407,8 +433,8 @@ export default function DispatcherControls({
                       step="any"
                       name="lng"
                       required
-                      min="-180"
-                      max="180"
+                      readOnly // NEW: Make read-only to encourage map use
+                      style={{ backgroundColor: "#f0f0f0" }}
                       value={incidentForm.lng}
                       onChange={handleInputChange(setIncidentForm)}
                     />
@@ -419,7 +445,10 @@ export default function DispatcherControls({
                   <button
                     type="button"
                     className="btn-cancel"
-                    onClick={() => setIsAddingIncident(false)}
+                    onClick={() => {
+                        setIsAddingIncident(false);
+                        clearPickedLocation(); // NEW: Clear pin on cancel
+                    }}
                   >
                     Cancel
                   </button>
@@ -515,8 +544,8 @@ export default function DispatcherControls({
                       step="any"
                       name="lat"
                       required
-                      min="-90"
-                      max="90"
+                      readOnly // NEW: Make read-only to encourage map use
+                      style={{ backgroundColor: "#f0f0f0" }}
                       value={carForm.lat}
                       onChange={handleInputChange(setCarForm)}
                     />
@@ -528,8 +557,8 @@ export default function DispatcherControls({
                       step="any"
                       name="lng"
                       required
-                      min="-180"
-                      max="180"
+                      readOnly // NEW: Make read-only to encourage map use
+                      style={{ backgroundColor: "#f0f0f0" }}
                       value={carForm.lng}
                       onChange={handleInputChange(setCarForm)}
                     />
@@ -616,8 +645,8 @@ export default function DispatcherControls({
                       step="any"
                       name="lat"
                       required
-                      min="-90"
-                      max="90"
+                      readOnly // NEW: Make read-only to encourage map use
+                      style={{ backgroundColor: "#f0f0f0" }}
                       value={stationForm.lat}
                       onChange={handleInputChange(setStationForm)}
                     />
@@ -629,8 +658,8 @@ export default function DispatcherControls({
                       step="any"
                       name="lng"
                       required
-                      min="-180"
-                      max="180"
+                      readOnly // NEW: Make read-only to encourage map use
+                      style={{ backgroundColor: "#f0f0f0" }}
                       value={stationForm.lng}
                       onChange={handleInputChange(setStationForm)}
                     />

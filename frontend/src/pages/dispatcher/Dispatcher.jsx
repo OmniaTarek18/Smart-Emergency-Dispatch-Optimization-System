@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EmergencyMap from "../../components/map/EmergencyMap";
 import DispatcherControls from "../../components/dispatcherControls/DispatcherControls";
-import axios from "axios";
+import api from "../../interceptor/api";
 // import "./Dispatcher.css"; 
 
 export default function Dispatcher() {
@@ -42,7 +42,7 @@ export default function Dispatcher() {
 
   const assignUnit = (incidentId, carId) => {
     try {
-      axios.post("http://127.0.0.1:8000/admin/incidents/dispatch/",
+      api.post("http://127.0.0.1:8000/admin/incidents/dispatch/",
         {
             incident_id: incidentId,
             new_vehicle_id: carId
@@ -70,7 +70,7 @@ export default function Dispatcher() {
 
   const getIncidents = async () => {
     try {
-      const response = await axios.get("http://127.0.0.1:8000/admin/incidents/",
+      const response = await api.get("http://127.0.0.1:8000/admin/incidents/",
         { headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` } }
       );
         if (response.data) {
@@ -84,7 +84,7 @@ export default function Dispatcher() {
 
     const getStations = async () => {
         try {
-            const response = await axios.get("http://127.0.0.1:8000/admin/stations/",
+            const response = await api.get("http://127.0.0.1:8000/admin/stations/",
                 { headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` } }
             );
             if (response.data) {
@@ -98,7 +98,7 @@ export default function Dispatcher() {
 
     const getVehicles = async () => {
       try {
-        const response = await axios.get("http://127.0.0.1:8000/admin/vehicles/",
+        const response = await api.get("http://127.0.0.1:8000/admin/vehicles/",
           { headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` } }
         );
             if (response.data) {

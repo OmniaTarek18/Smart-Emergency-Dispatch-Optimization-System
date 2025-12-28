@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { FaUser, FaEye, FaEyeSlash, FaUserShield } from "react-icons/fa";
 import { MdEmail } from "react-icons/md";
 import { TbLockPassword } from "react-icons/tb";
-import axios from "axios";
+import api from "../../interceptor/api";
 import "./AddUser.css";
 
 const AddUser = () => {
@@ -33,7 +33,7 @@ const AddUser = () => {
 
     try {
       const token = localStorage.getItem("access_token");
-      const response = await axios.post("http://127.0.0.1:8000/admin/users/create/", formData, {
+      const response = await api.post("http://127.0.0.1:8000/admin/users/create/", formData, {
         headers: {
           Authorization: `Bearer ${token}`
         }

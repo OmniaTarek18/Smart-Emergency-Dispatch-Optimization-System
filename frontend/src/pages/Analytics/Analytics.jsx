@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Clock, CheckCircle, Activity, Award, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import axios from 'axios';
+import api from "../../interceptor/api";
 import './Analytics.css';
 
 const COLORS = {
@@ -21,7 +21,7 @@ export default function Analytics() {
     const fetchAnalytics = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://127.0.0.1:8000/admin/analytics/", {
+        const response = await api.get("http://127.0.0.1:8000/admin/analytics/", {
           headers: {
             Authorization: `Bearer ${token}`
           }

@@ -246,7 +246,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"type\": \"FIRE\",\r\n    \"lat\": 120.22123,\r\n    \"lng\": 44.233444,\r\n    \"severity_level\" : \"HIGH\"\r\n}",
+							"raw": "{\r\n    \"type\": \"FIRE\",\r\n    \"lat\": 10.22123,\r\n    \"lng\": 4.233444,\r\n    \"severity_level\" : \"HIGH\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -353,6 +353,16 @@
 						"disableBodyPruning": true
 					},
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJlbWVyZ2VuY3lfZGlzcGF0Y2hlciIsImlhdCI6MTc2Njk1MDkxOSwiZXhwIjoxNzY2OTU5MDE5LCJ0eXBlIjoiYWNjZXNzIiwidXNlcl9pZCI6MSwidXNlcl9yb2xlIjoiQURNSU4ifQ.S1Y-zGkPpGYU57SLMhqfhDuSs7HVt7BzUY41FQrX0wA",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [
 							{
